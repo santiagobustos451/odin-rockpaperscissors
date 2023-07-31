@@ -4,26 +4,88 @@ let choices = [
     {name: 'paper', beats: 'rock'},
 ]
 
-document.addEventListener('DOMContentLoaded', game(5));
+let gameState;
+let maxScore;
 
-function getComputerChoice() {
-    return choices[Math.floor(Math.random() * 3)]
+let computerScore;
+let playerScore;
+
+let playerChoice;
+let computerChoice;
+
+let gameButton = document.querySelector("#new-game");
+gameButton.addEventListener('click', () => {
+    gameSetup(1);
+})
+
+let buttonContainer = document.querySelector(".buttons");
+let playerInput = Array.from(document.querySelectorAll(".player-input"));
+playerInput.forEach(button => {
+    button.addEventListener('click', pickChoice);
+});
+let infoScreen = document.querySelector("#info");
+let scoreboard = document.querySelector(".scoreboard")
+let infoPlayerScore = document.querySelector("#player-score");
+let infoComputerScore = document.querySelector("#computer-score");
+let nextButton = document.querySelector("#next");
+nextButton.addEventListener('click', updateGame);
+
+function updateGame(){
+    switch(gameState){
+        case "roundSetup":
+            nextButton.classList.remove("disabled");
+            if(playerChoice != undefined){
+                gameState = "roundPlay"
+                updateGame();
+                break;
+            }
+            buttonContainer.classList.remove("disabled");
+            infoScreen.innerHTML = "Choose your attack:"
+            break;
+        case "roundPlay":
+            scoreboard.classList.remove("disabled");
+            buttonContainer.classList.add("disabled");
+            computerChoice = getComputerChoice();
+            let result = playRound(computerChoice, playerChoice);
+            let announcement;
+            if(result === 'draw') {
+                announcement = 'Draw!';
+            }else if(result === 'computer') {
+                computerScore++;
+                announcement = 'Computer wins the round! ' + computerChoice.name +' beats ' + playerChoice.name + '. Score: Player: '+ playerScore + ' Computer: ' + computerScore;
+            }else {
+                playerScore++;
+                announcement = 'You win the round! '+playerChoice.name+' beats '+computerChoice.name+'.' + '. Score: Player: '+ playerScore + ' Computer: ' + computerScore;
+            }
+
+            infoScreen.innerHTML = "Your choice: "+playerChoice.name+"<br> Computer's choice: "+computerChoice.name+"<br>"+announcement;
+
+            playerChoice = null;
+
+            if(computerScore === maxScore || playerScore === maxScore){
+                gameState = "gameEnd";
+            }else{
+                gameState = "roundSetup";
+            }
+
+            break;
+        case "gameEnd":
+            if(computerScore === maxScore){
+                infoScreen.innerHTML = 'Computer wins ' + computerScore +'-'+ playerScore;
+            } else {
+                infoScreen.innerHTML = 'Player wins ' + playerScore +'-'+ computerScore;
+            }
+            buttonContainer.classList.add("disabled");
+            nextButton.classList.add("disabled");
+    }
 }
 
-function playRound(computerChoice,playerChoice){
-        //Compares values and returns results, and describes (You win/lose, choiceA beats choiceB!)
-
-        //Recieves choice objects
-
-    //If draw, return
-    if(computerChoice === playerChoice) return 'draw'
-    //If cpu wins, return
-    if(computerChoice.beats === playerChoice.name) return 'computer'
-    //return
-    return 'player'
+function pickChoice(e){
+    playerChoice = getChoice(e.target.getAttribute("data-selection"));
+    infoScreen.innerHTML = "Option selected = " + playerChoice.name;
 }
 
-function checkChoice(input){
+function getChoice(input){
     //get string, return choice object or fail
     for(choice of choices) {
         if(input === choice.name) return choice;
@@ -32,46 +94,25 @@ function checkChoice(input){
     return false;
 }
 
-function game(maxScore){
-        //Prompt the player for answers, play five rounds and give results
+function playRound(computerChoice,playerChoice){
+    //If draw, return
+    if(computerChoice === playerChoice) return 'draw'
+    //If cpu wins, return
+    if(computerChoice.beats === playerChoice.name) return 'computer'
+    //return
+    return 'player'
+}
 
-    let computerScore = 0;
-    let playerScore = 0;
+function gameSetup(maxScoreSetup){
+    computerScore = 0;
+    playerScore = 0;
+    maxScore = maxScoreSetup;
+    playerChoice = null;
+    gameState = "roundSetup";
+    infoScreen.innerHTML = "";
+    updateGame();
+}
 
-    //generate computer choice
-    //prompt the player. Validate the choice, if fail prompt again
-    //play round
-    //store round score
-    //if no one reaches 3 points, play new round
-    while(computerScore < maxScore && playerScore < maxScore){
-        let playerChoice;
-        let computerChoice = getComputerChoice();
-        while(!playerChoice){
-            playerChoice = checkChoice(prompt('What do you choose?').toLowerCase());
-            if(!playerChoice){
-                alert('Choice not recognized. Make sure you spell your choice correctly.')
-            }
-        }
-        let result = playRound(computerChoice, playerChoice);
-        if(result === 'draw') {
-            alert('Draw!');
-        }else if(result === 'computer') {
-            computerScore++;
-            alert('Computer wins the round! ' + computerChoice.name +' beats ' + playerChoice.name + '. Score: Player: '+ playerScore + ' Computer: ' + computerScore);
-        }else {
-            playerScore++;
-            alert('You win the round! '+playerChoice.name+' beats '+computerChoice.name+'.' + '. Score: Player: '+ playerScore + ' Computer: ' + computerScore);
-        }
-    }
-    
-    //give results
-    if(computerScore === maxScore){
-        alert('Computer wins ' + computerScore +'-'+ playerScore)
-    } else {
-        alert('Player wins ' + playerScore +'-'+ computerScore)
-    }
-
-    if(confirm('Play again?')){
-        game();
-    }
+function getComputerChoice() {
+    return choices[Math.floor(Math.random() * 3)]
 }
