@@ -15,7 +15,7 @@ let computerChoice;
 
 let gameButton = document.querySelector("#new-game");
 gameButton.addEventListener('click', () => {
-    gameSetup(1);
+    gameSetup(5);
 })
 
 let buttonContainer = document.querySelector(".buttons");
